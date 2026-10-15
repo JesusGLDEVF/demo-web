@@ -4,6 +4,7 @@ const path = require("path");
 const crypto = require("crypto");
 const helmet = require("helmet");
 const compression = require("compression");
+const { rateLimit } = require("express-rate-limit");
 
 const app = express();
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, "data", "tasks.json");
@@ -15,6 +16,21 @@ app.use(helmet());
 app.use(compression({ threshold: 512 }));
 app.use(express.json({ limit: "10kb" }));
 app.use(express.static(path.join(__dirname, "public")));
+
+// ---------- limite de peticiones (anti-abuso) ----------
+// configurable por entorno; los tests usan un limite bajo para verificar el 429
+const RATE_LIMITE = Number(process.env.RATE_LIMIT_MAX) || 120;
+const RATE_VENTANA_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000;
+
+const limitadorApi = rateLimit({
+  windowMs: RATE_VENTANA_MS,
+  limit: RATE_LIMITE,
+  standardHeaders: "draft-7", // RateLimit (combinada) + RateLimit-Policy
+  legacyHeaders: false, // sin X-RateLimit-* antiguas
+  message: { error: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." },
+});
+
+app.use("/api", limitadorApi);
 
 // ---------- estado en memoria (sin I/O por request) ----------
 let tareas = null;
