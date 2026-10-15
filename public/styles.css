@@ -1,3 +1,39 @@
+/* ===================== variables ===================== */
+:root {
+  --fondo: #f1f5f9;
+  --tarjeta: #ffffff;
+  --texto: #0f172a;
+  --texto-suave: #64748b;
+  --borde: #e2e8f0;
+  --borde-fuerte: #cbd5e1;
+  --primario: #6366f1;
+  --primario-texto: #4f46e5;
+  --primario-suave: #eef2ff;
+  --anillo: rgb(99 102 241 / 0.16);
+  --pista: rgb(99 102 241 / 0.14);
+  --peligro: #ef4444;
+  --sombra-tarjeta: 0 24px 60px -20px rgb(15 23 42 / 0.25);
+  --sombra-suave: 0 4px 14px -8px rgb(15 23 42 / 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0b1220;
+    --tarjeta: #131c31;
+    --texto: #e2e8f0;
+    --texto-suave: #8ea0b8;
+    --borde: #24314d;
+    --borde-fuerte: #33415f;
+    --primario-texto: #a5b4fc;
+    --primario-suave: #1e1b4b;
+    --anillo: rgb(129 140 248 / 0.25);
+    --pista: rgb(129 140 248 / 0.18);
+    --sombra-tarjeta: 0 24px 60px -20px rgb(0 0 0 / 0.6);
+    --sombra-suave: 0 4px 14px -8px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* ===================== base ===================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -5,148 +41,483 @@
 }
 
 body {
-  font-family: "Segoe UI", system-ui, sans-serif;
-  background: linear-gradient(160deg, #eef2ff 0%, #f8fafc 60%);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  padding: 48px 16px;
-  color: #1e293b;
+  align-items: flex-start;
+  padding: 40px 16px 56px;
 }
 
+/* fondo decorativo */
+.fondo {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+.blob--1 {
+  width: 480px;
+  height: 480px;
+  background: #a5b4fc;
+  opacity: 0.55;
+  top: -160px;
+  left: -140px;
+}
+
+.blob--2 {
+  width: 420px;
+  height: 420px;
+  background: #fbcfe8;
+  opacity: 0.5;
+  bottom: -160px;
+  right: -120px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .blob--1 { background: #312e81; }
+  .blob--2 { background: #500724; }
+}
+
+/* ===================== tarjeta principal ===================== */
 .app {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 24px;
+  box-shadow: var(--sombra-tarjeta);
+  padding: 30px;
+  animation: aparecer 0.4s ease both;
 }
 
-.app__header h1 {
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.app__sub {
-  color: #64748b;
-  margin: 4px 0 24px;
-  font-size: 0.9rem;
+/* ===================== cabecera ===================== */
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
+.cabecera__logo {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(135deg, #818cf8, #6366f1 55%, #4f46e5);
+  box-shadow: 0 10px 22px -10px rgb(99 102 241 / 0.8);
+}
+
+.cabecera h1 {
+  font-size: 1.42rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.cabecera__sub {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+  margin-top: 2px;
+}
+
+/* ===================== progreso ===================== */
+.progreso {
+  background: var(--primario-suave);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.progreso__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.progreso__titulo {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--texto-suave);
+}
+
+.progreso__pct {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primario-texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.progreso__barra {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pista);
+  overflow: hidden;
+}
+
+.progreso__relleno {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #818cf8, #6366f1);
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ===================== formulario ===================== */
 .form {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
 }
 
 .form input {
   flex: 1;
-  padding: 12px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  min-width: 0;
+  padding: 13px 16px;
   font-size: 0.95rem;
-  background: #fff;
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 1.5px solid var(--borde-fuerte);
+  border-radius: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.form input:focus,
-.buscador input:focus {
-  outline: 2px solid #6366f1;
-  outline-offset: 1px;
-  border-color: transparent;
+.form input::placeholder {
+  color: var(--texto-suave);
 }
 
-.form button {
-  padding: 12px 20px;
+.form input:focus {
+  outline: none;
+  border-color: var(--primario);
+  box-shadow: 0 0 0 4px var(--anillo);
+}
+
+.boton-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
   border: none;
-  border-radius: 10px;
-  background: #6366f1;
-  color: #fff;
+  border-radius: 14px;
+  font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
+  color: #fff;
   cursor: pointer;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  box-shadow: 0 10px 20px -10px rgb(99 102 241 / 0.9);
+  transition: transform 0.12s, box-shadow 0.15s, filter 0.15s;
 }
 
-.form button:hover {
-  background: #4f46e5;
+.boton-primario:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -10px rgb(99 102 241 / 0.95);
+}
+
+.boton-primario:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
+
+.boton-primario:focus-visible,
+.pestana:focus-visible,
+.eliminar:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
+}
+
+/* ===================== controles (pestañas + buscador) ===================== */
+.controles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 16px;
+}
+
+.pestanas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 13px;
+}
+
+.pestana {
+  border: none;
+  background: transparent;
+  padding: 7px 15px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+
+.pestana:hover {
+  color: var(--texto);
+}
+
+.pestana.activa {
+  background: var(--tarjeta);
+  color: var(--primario-texto);
+  box-shadow: 0 2px 6px -2px rgb(15 23 42 / 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pestana.activa {
+    box-shadow: 0 0 0 1px var(--borde);
+  }
 }
 
 .buscador {
-  margin-bottom: 20px;
+  position: relative;
+  flex: 1;
+  min-width: 190px;
+}
+
+.buscador__icono {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texto-suave);
+  pointer-events: none;
 }
 
 .buscador input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  background: #ffffffcc;
+  padding: 10px 14px 10px 38px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 1.5px solid var(--borde);
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+.buscador input::placeholder {
+  color: var(--texto-suave);
+}
+
+.buscador input:focus {
+  outline: none;
+  border-color: var(--primario);
+  box-shadow: 0 0 0 4px var(--anillo);
+}
+
+/* ===================== mensajes ===================== */
 .mensaje {
-  margin: 0 0 16px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 0.87rem;
+  animation: aparecer 0.2s ease both;
 }
 
 .mensaje--info {
-  background: #eef2ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  background: var(--primario-suave);
+  color: var(--primario-texto);
 }
 
 .mensaje--error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: rgb(239 68 68 / 0.1);
+  color: var(--peligro);
+  border: 1px solid rgb(239 68 68 / 0.25);
 }
 
+/* ===================== lista ===================== */
 .lista {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .lista li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  gap: 13px;
+  padding: 13px 14px 13px 16px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  animation: entrar 0.22s ease both;
 }
 
-.lista li.completada span {
-  text-decoration: line-through;
-  color: #94a3b8;
+.lista li:hover {
+  border-color: var(--borde-fuerte);
+  box-shadow: var(--sombra-suave);
 }
 
-.lista li input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #6366f1;
-  cursor: pointer;
+@keyframes entrar {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* checkbox personalizado */
+.check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  border: 2px solid var(--borde-fuerte);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, transform 0.1s;
+}
+
+.check:hover {
+  border-color: var(--primario);
+}
+
+.check:active {
+  transform: scale(0.92);
+}
+
+.check:checked {
+  border-color: var(--primario);
+  background: var(--primario) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 13px no-repeat;
+}
+
+.check:focus-visible {
+  outline: 2px solid var(--primario);
+  outline-offset: 2px;
 }
 
 .lista li span {
   flex: 1;
   font-size: 0.95rem;
+  line-height: 1.35;
   word-break: break-word;
 }
 
-.lista li .eliminar {
-  border: none;
-  background: transparent;
-  color: #cbd5e1;
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 8px;
+.lista li.completada span {
+  text-decoration: line-through;
+  text-decoration-color: var(--texto-suave);
+  color: var(--texto-suave);
 }
 
-.lista li .eliminar:hover {
-  color: #ef4444;
-  background: #fef2f2;
+.eliminar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background-color 0.15s;
+}
+
+.lista li:hover .eliminar,
+.lista li:focus-within .eliminar {
+  opacity: 1;
+}
+
+.eliminar:hover {
+  color: var(--peligro);
+  background: rgb(239 68 68 / 0.12);
+}
+
+/* en pantallas táctiles no existe hover: siempre visible */
+@media (hover: none) {
+  .eliminar {
+    opacity: 1;
+  }
+}
+
+/* ===================== estado vacío ===================== */
+.vacio {
+  text-align: center;
+  padding: 36px 20px 26px;
+  animation: aparecer 0.3s ease both;
+}
+
+.vacio__icono {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: var(--primario-suave);
+  color: var(--primario);
+}
+
+.vacio__titulo {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.vacio__texto {
+  font-size: 0.87rem;
+  color: var(--texto-suave);
+}
+
+/* ===================== responsive ===================== */
+@media (max-width: 560px) {
+  body {
+    padding: 20px 12px 40px;
+  }
+
+  .app {
+    padding: 22px;
+    border-radius: 20px;
+  }
+
+  .controles {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pestanas {
+    justify-content: space-between;
+  }
+
+  .pestana {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+/* ===================== accesibilidad ===================== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }

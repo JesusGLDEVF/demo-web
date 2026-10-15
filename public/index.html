@@ -3,28 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tareas Demo</title>
+  <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="Gestor de tareas de demostración: crea, busca, filtra y completa tareas. Node.js + Express con una interfaz moderna.">
+  <title>Mis tareas · Gestor de tareas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="fondo" aria-hidden="true">
+    <div class="blob blob--1"></div>
+    <div class="blob blob--2"></div>
+  </div>
+
   <main class="app">
-    <header class="app__header">
-      <h1>📋 Gestor de tareas</h1>
-      <p class="app__sub">Proyecto de prueba &middot; flujo de trabajo</p>
+    <header class="cabecera">
+      <div class="cabecera__logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Mis tareas</h1>
+        <p class="cabecera__sub">Organiza tu día, una tarea a la vez</p>
+      </div>
     </header>
 
+    <section class="progreso" aria-label="Progreso de tareas">
+      <div class="progreso__fila">
+        <span class="progreso__titulo" id="progreso-detalle">Aún no hay tareas</span>
+        <span class="progreso__pct" id="progreso-pct">0%</span>
+      </div>
+      <div class="progreso__barra">
+        <div class="progreso__relleno" id="progreso-relleno"></div>
+      </div>
+    </section>
+
     <form id="form-tarea" class="form" autocomplete="off">
-      <input id="input-titulo" type="text" placeholder="Nueva tarea..." maxlength="120">
-      <button type="submit">Agregar</button>
+      <input id="input-titulo" type="text" placeholder="¿Qué hay que hacer?" maxlength="120" aria-label="Nueva tarea">
+      <button type="submit" class="boton-primario">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span>Agregar</span>
+      </button>
     </form>
 
-    <div class="buscador">
-      <input id="buscador" type="search" placeholder="Buscar tareas...">
+    <div class="controles">
+      <div class="pestanas" id="pestanas" role="group" aria-label="Filtrar por estado">
+        <button type="button" class="pestana activa" data-estado="" aria-pressed="true">Todas</button>
+        <button type="button" class="pestana" data-estado="pendientes" aria-pressed="false">Pendientes</button>
+        <button type="button" class="pestana" data-estado="completadas" aria-pressed="false">Completadas</button>
+      </div>
+      <div class="buscador">
+        <svg class="buscador__icono" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input id="buscador" type="search" placeholder="Buscar tareas..." aria-label="Buscar tareas">
+      </div>
     </div>
 
     <p id="mensaje" class="mensaje" hidden></p>
 
     <ul id="lista" class="lista"></ul>
+
+    <div id="vacio" class="vacio" hidden>
+      <div class="vacio__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1"/>
+        </svg>
+      </div>
+      <p class="vacio__titulo" id="vacio-titulo">No hay tareas todavía</p>
+      <p class="vacio__texto" id="vacio-texto">Agrega la primera con el formulario de arriba.</p>
+    </div>
   </main>
 
   <script src="app.js"></script>
