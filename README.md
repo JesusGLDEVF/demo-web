@@ -119,3 +119,8 @@ git commit -m "feat: ..."
 git push -u origin feat/mi-mejora
 gh pr create     # → CI en verde → merge → limpieza de ramas
 ```
+
+## Licencia
+
+[MIT](LICENSE) — este código se puede usar, modificar y compartir libremente.
+
