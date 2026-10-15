@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1759000000001,
+    "titulo": "Preparar presentación del proyecto",
+    "completada": true,
+    "creada": "2026-10-10T09:15:00.000Z"
+  },
+  {
+    "id": 1759000000002,
+    "titulo": "Corregir estilos del login en móvil",
+    "completada": false,
+    "creada": "2026-10-11T14:30:00.000Z"
+  },
+  {
+    "id": 1759000000003,
+    "titulo": "Revisar consultas lentas del reporte mensual",
+    "completada": false,
+    "creada": "2026-10-12T10:05:00.000Z"
+  },
+  {
+    "id": 1759000000004,
+    "titulo": "Documentar API de usuarios y permisos",
+    "completada": true,
+    "creada": "2026-10-13T16:40:00.000Z"
+  },
+  {
+    "id": 1759000000005,
+    "titulo": "Probar flujo de pago con tarjeta & PayPal",
+    "completada": false,
+    "creada": "2026-10-14T11:20:00.000Z"
+  }
+]

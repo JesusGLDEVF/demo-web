@@ -1,0 +1,15 @@
+{
+  "name": "demo-web",
+  "version": "1.0.0",
+  "description": "Gestor de tareas - proyecto de prueba del flujo de trabajo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "compression": "^1.8.2",
+    "express": "^4.19.2",
+    "helmet": "^8.3.0"
+  }
+}
