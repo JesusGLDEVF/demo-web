@@ -8,6 +8,8 @@ const compression = require("compression");
 const app = express();
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, "data", "tasks.json");
 const MAX_TITULO = 120;
+const LIMITE_DEFECTO = 50; // tareas por pagina si no se envia ?limite
+const MAX_LIMITE = 100;
 
 app.use(helmet());
 app.use(compression({ threshold: 512 }));
@@ -73,12 +75,29 @@ function normalizar(texto) {
   return texto.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
+// paginacion: devuelve { error } cuando los parametros son invalidos
+function parsearPaginacion(query) {
+  const pagina = query.pagina === undefined || query.pagina === "" ? 1 : Number(query.pagina);
+  if (!Number.isInteger(pagina) || pagina < 1) {
+    return { error: "'pagina' debe ser un numero entero mayor o igual a 1" };
+  }
+  const limite =
+    query.limite === undefined || query.limite === "" ? LIMITE_DEFECTO : Number(query.limite);
+  if (!Number.isInteger(limite) || limite < 1 || limite > MAX_LIMITE) {
+    return { error: `'limite' debe ser un numero entero entre 1 y ${MAX_LIMITE}` };
+  }
+  return { pagina, limite };
+}
+
 // ---------- rutas API ----------
 app.get("/api/tasks", async (req, res, next) => {
   try {
     const lista = await cargarTareas();
     const q = (req.query.q || "").toString().trim();
     const estado = (req.query.estado || "").toString().trim();
+
+    const pag = parsearPaginacion(req.query);
+    if (pag.error) return res.status(400).json({ error: pag.error });
 
     let resultado = lista;
     if (q) {
@@ -88,7 +107,25 @@ app.get("/api/tasks", async (req, res, next) => {
     if (estado === "pendientes") resultado = resultado.filter((t) => !t.completada);
     else if (estado === "completadas") resultado = resultado.filter((t) => t.completada);
 
-    res.json(resultado);
+    const total = resultado.length;
+    const totalPaginas = Math.max(1, Math.ceil(total / pag.limite));
+    const inicio = (pag.pagina - 1) * pag.limite;
+
+    // stats globales (sin filtros): alimentan la barra de progreso
+    const completadas = lista.filter((t) => t.completada).length;
+
+    res.json({
+      tareas: resultado.slice(inicio, inicio + pag.limite),
+      total,
+      pagina: pag.pagina,
+      limite: pag.limite,
+      totalPaginas,
+      stats: {
+        total: lista.length,
+        completadas,
+        pendientes: lista.length - completadas,
+      },
+    });
   } catch (err) {
     next(err);
   }

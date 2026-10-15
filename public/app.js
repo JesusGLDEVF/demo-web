@@ -1,4 +1,5 @@
 const API = "/api/tasks";
+const LIMITE = 10; // tareas por página en la interfaz
 
 const form = document.getElementById("form-tarea");
 const input = document.getElementById("input-titulo");
@@ -12,9 +13,12 @@ const pestanas = document.getElementById("pestanas");
 const progresoPct = document.getElementById("progreso-pct");
 const progresoDetalle = document.getElementById("progreso-detalle");
 const progresoRelleno = document.getElementById("progreso-relleno");
+const botonMas = document.getElementById("cargar-mas");
 
 let debounceId = null;
 let estadoActivo = ""; // "" (todas) | "pendientes" | "completadas"
+let pagina = 1;
+let cargandoMas = false;
 
 // SVG estático propio (nunca contiene datos del usuario)
 const ICONO_ELIMINAR = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
@@ -45,48 +49,64 @@ async function pedir(url, opciones) {
   return datos;
 }
 
-function construirUrl(q, estado) {
+function construirUrl(q, estado, pagina) {
   const params = new URLSearchParams();
+  params.set("pagina", pagina);
+  params.set("limite", LIMITE);
   if (q) params.set("q", q);
   if (estado) params.set("estado", estado);
-  const cadena = params.toString();
-  return cadena ? API + "?" + cadena : API;
+  return API + "?" + params.toString();
 }
 
+// carga la primera página (o la única vista tras buscar/filtrar)
 async function cargar() {
   const q = buscador.value.trim();
   try {
-    let todas;
-    let visibles;
-
-    if (q || estadoActivo) {
-      // una petición para el progreso (sin filtros) y otra para la lista visible
-      [todas, visibles] = await Promise.all([
-        pedir(API),
-        pedir(construirUrl(q, estadoActivo)),
-      ]);
-    } else {
-      todas = visibles = await pedir(API);
-    }
-
-    render(visibles);
-    actualizarProgreso(todas);
-    mostrarEstadoVacio(visibles, q);
+    const datos = await pedir(construirUrl(q, estadoActivo, 1));
+    pagina = datos.pagina;
+    render(datos.tareas);
+    actualizarProgreso(datos.stats);
+    actualizarBotonMas(datos);
+    mostrarEstadoVacio(datos.tareas, q);
     mostrarMensaje("");
   } catch (err) {
     mostrarMensaje("No se pudieron cargar las tareas: " + err.message, "error");
   }
 }
 
-function actualizarProgreso(todas) {
-  const total = todas.length;
-  const hechas = todas.filter((t) => t.completada).length;
-  const pct = total === 0 ? 0 : Math.round((hechas / total) * 100);
+// añade la siguiente página al final de la lista
+async function cargarMas() {
+  if (cargandoMas) return;
+  cargandoMas = true;
+  botonMas.disabled = true;
+  const q = buscador.value.trim();
+  try {
+    const datos = await pedir(construirUrl(q, estadoActivo, pagina + 1));
+    pagina = datos.pagina;
+    agregarAlFinal(datos.tareas);
+    actualizarProgreso(datos.stats);
+    actualizarBotonMas(datos);
+  } catch (err) {
+    mostrarMensaje("No se pudieron cargar más tareas: " + err.message, "error");
+  } finally {
+    cargandoMas = false;
+    botonMas.disabled = false;
+  }
+}
+
+function actualizarProgreso(stats) {
+  const pct = stats.total === 0 ? 0 : Math.round((stats.completadas / stats.total) * 100);
 
   progresoRelleno.style.width = pct + "%";
   progresoPct.textContent = pct + "%";
   progresoDetalle.textContent =
-    total === 0 ? "Aún no hay tareas" : hechas + " de " + total + " completadas";
+    stats.total === 0
+      ? "Aún no hay tareas"
+      : stats.completadas + " de " + stats.total + " completadas";
+}
+
+function actualizarBotonMas(datos) {
+  botonMas.hidden = datos.pagina >= datos.totalPaginas;
 }
 
 function mostrarEstadoVacio(visibles, q) {
@@ -111,58 +131,64 @@ function mostrarEstadoVacio(visibles, q) {
   }
 }
 
+function crearItem(t) {
+  const li = document.createElement("li");
+  li.className = t.completada ? "completada" : "";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.className = "check";
+  checkbox.checked = t.completada;
+  checkbox.setAttribute(
+    "aria-label",
+    t.completada ? "Marcar como pendiente" : "Marcar como completada"
+  );
+  checkbox.addEventListener("change", async () => {
+    try {
+      await pedir(API + "/" + encodeURIComponent(t.id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completada: checkbox.checked }),
+      });
+      cargar();
+    } catch (err) {
+      checkbox.checked = !checkbox.checked; // revertir cambio visual
+      mostrarMensaje("No se pudo actualizar: " + err.message, "error");
+    }
+  });
+
+  const span = document.createElement("span");
+  span.textContent = t.titulo; // textContent: inmune a XSS
+
+  const boton = document.createElement("button");
+  boton.type = "button";
+  boton.className = "eliminar";
+  boton.title = "Eliminar";
+  boton.setAttribute("aria-label", "Eliminar tarea");
+  boton.innerHTML = ICONO_ELIMINAR; // cadena estática propia, sin datos del usuario
+  boton.addEventListener("click", async () => {
+    try {
+      await pedir(API + "/" + encodeURIComponent(t.id), { method: "DELETE" });
+      cargar();
+    } catch (err) {
+      mostrarMensaje("No se pudo eliminar: " + err.message, "error");
+    }
+  });
+
+  li.append(checkbox, span, boton);
+  return li;
+}
+
 function render(tareas) {
   lista.innerHTML = ""; // aquí no se insertan datos del usuario, solo se limpia
   const frag = document.createDocumentFragment();
+  tareas.forEach((t) => frag.appendChild(crearItem(t)));
+  lista.appendChild(frag);
+}
 
-  tareas.forEach((t) => {
-    const li = document.createElement("li");
-    li.className = t.completada ? "completada" : "";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "check";
-    checkbox.checked = t.completada;
-    checkbox.setAttribute(
-      "aria-label",
-      t.completada ? "Marcar como pendiente" : "Marcar como completada"
-    );
-    checkbox.addEventListener("change", async () => {
-      try {
-        await pedir(API + "/" + encodeURIComponent(t.id), {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ completada: checkbox.checked }),
-        });
-        cargar();
-      } catch (err) {
-        checkbox.checked = !checkbox.checked; // revertir cambio visual
-        mostrarMensaje("No se pudo actualizar: " + err.message, "error");
-      }
-    });
-
-    const span = document.createElement("span");
-    span.textContent = t.titulo; // textContent: inmune a XSS
-
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.className = "eliminar";
-    boton.title = "Eliminar";
-    boton.setAttribute("aria-label", "Eliminar tarea");
-    boton.innerHTML = ICONO_ELIMINAR; // cadena estática propia, sin datos del usuario
-    boton.addEventListener("click", async () => {
-      try {
-        await pedir(API + "/" + encodeURIComponent(t.id), { method: "DELETE" });
-        cargar();
-      } catch (err) {
-        mostrarMensaje("No se pudo eliminar: " + err.message, "error");
-      }
-    });
-
-    li.append(checkbox, span, boton);
-    frag.appendChild(li);
-  });
-
+function agregarAlFinal(tareas) {
+  const frag = document.createDocumentFragment();
+  tareas.forEach((t) => frag.appendChild(crearItem(t)));
   lista.appendChild(frag);
 }
 
@@ -205,5 +231,7 @@ buscador.addEventListener("input", () => {
   clearTimeout(debounceId);
   debounceId = setTimeout(cargar, 300);
 });
+
+botonMas.addEventListener("click", cargarMas);
 
 cargar();
