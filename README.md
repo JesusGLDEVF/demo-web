@@ -1,5 +1,7 @@
 # demo-web — Gestor de tareas
 
+[![CI](https://github.com/JesusGLDEVF/demo-web/actions/workflows/ci.yml/badge.svg)](https://github.com/JesusGLDEVF/demo-web/actions/workflows/ci.yml)
+
 Gestor de tareas de demostración: un proyecto pequeño pero **completo** (backend, frontend, tests y seguridad) usado para practicar un flujo de trabajo real: `rama → cambios → tests → Pull Request → merge`.
 
 ## Stack
@@ -94,6 +96,18 @@ El repositorio incluye un blueprint de [Render](https://render.com) (`render.yam
 
 Notas del plan gratuito: la instancia se duerme tras 15 minutos sin visitas (el primer acceso del día tarda ~1 min) y `data/tasks.json` se resetea en cada deploy — suficiente para una demo; para persistencia real haría falta un disco o una base de datos.
 
+## Pruebas y CI
+
+La suite se ejecuta en local con el runner integrado de Node:
+
+```bash
+npm test   # 27 pruebas
+```
+
+En GitHub, un workflow de **GitHub Actions** (`.github/workflows/ci.yml`) corre la misma suite **automáticamente en cada Pull Request** y en cada push a `main`.
+
+La rama `main` está además **protegida**: no acepta pushes directos — solo Pull Requests con el check `Tests (Node 22)` en verde. Las reglas no dependen de la disciplina: las aplica GitHub.
+
 ## Flujo de trabajo
 
 Cada mejora viaja por su propia rama y Pull Request:
@@ -103,5 +117,5 @@ git checkout -b feat/mi-mejora
 # ... cambios + npm test ...
 git commit -m "feat: ..."
 git push -u origin feat/mi-mejora
-gh pr create     # → revisión → merge → limpieza de ramas
+gh pr create     # → CI en verde → merge → limpieza de ramas
 ```
