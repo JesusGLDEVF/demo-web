@@ -84,6 +84,16 @@ Respuesta de `GET /api/tasks`:
 | `tests/` | Pruebas automatizadas (API + rate limiting) |
 | `demo_bugs.py` | Script de "ataques" usado durante la demo inicial |
 
+## Deploy (Render)
+
+El repositorio incluye un blueprint de [Render](https://render.com) (`render.yaml`): al conectar el repo se crea el servicio y **cada push a `main` despliega automáticamente**.
+
+1. Crea una cuenta en [render.com](https://render.com) usando tu cuenta de GitHub
+2. **New +** → **Blueprint** → selecciona este repositorio → **Apply**
+3. En ~2 minutos tendrás tu URL pública con HTTPS
+
+Notas del plan gratuito: la instancia se duerme tras 15 minutos sin visitas (el primer acceso del día tarda ~1 min) y `data/tasks.json` se resetea en cada deploy — suficiente para una demo; para persistencia real haría falta un disco o una base de datos.
+
 ## Flujo de trabajo
 
 Cada mejora viaja por su propia rama y Pull Request:
