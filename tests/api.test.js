@@ -50,47 +50,96 @@ async function api(ruta, { method = "GET", body, rawBody } = {}) {
 test("GET /api/tasks devuelve las tareas e incluye headers de seguridad", async () => {
   const { status, body, headers } = await api("/api/tasks");
   assert.equal(status, 200);
-  assert.equal(body.length, 5);
+  assert.equal(body.tareas.length, 5);
+  assert.equal(body.total, 5);
+  assert.equal(body.pagina, 1);
+  assert.equal(body.limite, 50); // limite por defecto
+  assert.equal(body.totalPaginas, 1);
+  assert.deepEqual(body.stats, { total: 5, completadas: 2, pendientes: 3 });
   assert.equal(headers.get("x-content-type-options"), "nosniff"); // helmet activo
 });
 
 test("busqueda insensible a mayusculas", async () => {
   const { body } = await api("/api/tasks?q=LOGIN");
-  assert.equal(body.length, 1);
+  assert.equal(body.tareas.length, 1);
 });
 
 test("busqueda insensible a acentos (movil encuentra movil con acento)", async () => {
   const { body } = await api("/api/tasks?q=movil");
-  assert.equal(body.length, 1);
+  assert.equal(body.tareas.length, 1);
 });
 
 test("busqueda con caracteres especiales (&) no rompe la query", async () => {
   const { body } = await api("/api/tasks?q=" + encodeURIComponent("tarjeta & PayPal"));
-  assert.equal(body.length, 1);
+  assert.equal(body.tareas.length, 1);
 });
 
 // ---------- filtro por estado ----------
 test("?estado=completadas devuelve solo las completadas", async () => {
   const { body } = await api("/api/tasks?estado=completadas");
-  assert.equal(body.length, 2);
-  assert.ok(body.every((t) => t.completada === true));
+  assert.equal(body.tareas.length, 2);
+  assert.ok(body.tareas.every((t) => t.completada === true));
 });
 
 test("?estado=pendientes devuelve solo las pendientes", async () => {
   const { body } = await api("/api/tasks?estado=pendientes");
-  assert.equal(body.length, 3);
-  assert.ok(body.every((t) => t.completada === false));
+  assert.equal(body.tareas.length, 3);
+  assert.ok(body.tareas.every((t) => t.completada === false));
 });
 
 test("?estado se combina con la busqueda (q)", async () => {
   const { body } = await api("/api/tasks?estado=completadas&q=PROYECTO");
-  assert.equal(body.length, 1);
-  assert.equal(body[0].completada, true);
+  assert.equal(body.tareas.length, 1);
+  assert.equal(body.tareas[0].completada, true);
 });
 
 test("?estado con valor desconocido no filtra (devuelve todo)", async () => {
   const { body } = await api("/api/tasks?estado=loquesea");
-  assert.equal(body.length, 5);
+  assert.equal(body.tareas.length, 5);
+});
+
+// ---------- paginacion ----------
+test("paginacion: ?limite=2 devuelve 2 tareas y metadatos correctos", async () => {
+  const { body } = await api("/api/tasks?limite=2");
+  assert.equal(body.tareas.length, 2);
+  assert.equal(body.total, 5);
+  assert.equal(body.totalPaginas, 3);
+  assert.equal(body.pagina, 1);
+  assert.equal(body.limite, 2);
+});
+
+test("paginacion: ?pagina=3&limite=2 devuelve la ultima pagina", async () => {
+  const { body } = await api("/api/tasks?pagina=3&limite=2");
+  assert.equal(body.tareas.length, 1);
+  assert.equal(body.pagina, 3);
+});
+
+test("paginacion: pagina fuera de rango devuelve lista vacia (no error)", async () => {
+  const { status, body } = await api("/api/tasks?pagina=99");
+  assert.equal(status, 200);
+  assert.equal(body.tareas.length, 0);
+  assert.equal(body.totalPaginas, 1);
+});
+
+test("paginacion: se combina con el filtro de estado", async () => {
+  const { body } = await api("/api/tasks?estado=pendientes&limite=2&pagina=2");
+  assert.equal(body.tareas.length, 1);
+  assert.equal(body.total, 3);
+  assert.equal(body.totalPaginas, 2);
+});
+
+test("paginacion: 'stats' refleja el total global aunque haya filtro", async () => {
+  const { body } = await api("/api/tasks?estado=completadas&limite=1");
+  assert.equal(body.tareas.length, 1);
+  assert.deepEqual(body.stats, { total: 5, completadas: 2, pendientes: 3 });
+});
+
+test("paginacion: parametros invalidos -> 400", async () => {
+  for (const query of ["pagina=0", "pagina=abc", "limite=0", "limite=999"]) {
+    const { status, body } = await api("/api/tasks?" + query);
+    assert.equal(status, 400, `debe fallar con ?${query}`);
+    assert.ok(body.error);
+  }
 });
 
 // ---------- creacion y validacion ----------
@@ -170,7 +219,7 @@ test("DELETE inexistente -> 404; DELETE real -> desaparece", async () => {
   assert.equal(del.status, 200);
 
   const lista = (await api("/api/tasks?q=" + encodeURIComponent("para borrar"))).body;
-  assert.equal(lista.length, 0);
+  assert.equal(lista.tareas.length, 0);
 });
 
 // ---------- rutas y errores ----------
@@ -188,7 +237,7 @@ test("5 POST concurrentes: ninguno se pierde (sin condicion de carrera)", async 
     )
   );
   const { body } = await api("/api/tasks?q=concurrente");
-  assert.equal(body.length, 5);
+  assert.equal(body.tareas.length, 5);
 });
 
 // ---------- datos peligrosos ----------
