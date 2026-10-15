@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#6366f1">
+  <meta name="description" content="Gestor de tareas de demostración: crea, busca, filtra y completa tareas. Node.js + Express con una interfaz moderna.">
   <title>Mis tareas · Gestor de tareas</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
@@ -49,7 +50,7 @@
     </form>
 
     <div class="controles">
-      <div class="pestanas" id="pestanas" role="tablist" aria-label="Filtrar por estado">
+      <div class="pestanas" id="pestanas" role="group" aria-label="Filtrar por estado">
         <button type="button" class="pestana activa" data-estado="" aria-pressed="true">Todas</button>
         <button type="button" class="pestana" data-estado="pendientes" aria-pressed="false">Pendientes</button>
         <button type="button" class="pestana" data-estado="completadas" aria-pressed="false">Completadas</button>
