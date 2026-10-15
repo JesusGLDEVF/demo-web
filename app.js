@@ -78,9 +78,17 @@ app.get("/api/tasks", async (req, res, next) => {
   try {
     const lista = await cargarTareas();
     const q = (req.query.q || "").toString().trim();
-    if (!q) return res.json(lista);
-    const objetivo = normalizar(q);
-    res.json(lista.filter((t) => normalizar(t.titulo).includes(objetivo)));
+    const estado = (req.query.estado || "").toString().trim();
+
+    let resultado = lista;
+    if (q) {
+      const objetivo = normalizar(q);
+      resultado = resultado.filter((t) => normalizar(t.titulo).includes(objetivo));
+    }
+    if (estado === "pendientes") resultado = resultado.filter((t) => !t.completada);
+    else if (estado === "completadas") resultado = resultado.filter((t) => t.completada);
+
+    res.json(resultado);
   } catch (err) {
     next(err);
   }

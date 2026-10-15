@@ -69,6 +69,30 @@ test("busqueda con caracteres especiales (&) no rompe la query", async () => {
   assert.equal(body.length, 1);
 });
 
+// ---------- filtro por estado ----------
+test("?estado=completadas devuelve solo las completadas", async () => {
+  const { body } = await api("/api/tasks?estado=completadas");
+  assert.equal(body.length, 2);
+  assert.ok(body.every((t) => t.completada === true));
+});
+
+test("?estado=pendientes devuelve solo las pendientes", async () => {
+  const { body } = await api("/api/tasks?estado=pendientes");
+  assert.equal(body.length, 3);
+  assert.ok(body.every((t) => t.completada === false));
+});
+
+test("?estado se combina con la busqueda (q)", async () => {
+  const { body } = await api("/api/tasks?estado=completadas&q=PROYECTO");
+  assert.equal(body.length, 1);
+  assert.equal(body[0].completada, true);
+});
+
+test("?estado con valor desconocido no filtra (devuelve todo)", async () => {
+  const { body } = await api("/api/tasks?estado=loquesea");
+  assert.equal(body.length, 5);
+});
+
 // ---------- creacion y validacion ----------
 test("POST valido crea tarea con UUID y recorta espacios", async () => {
   const { status, body } = await api("/api/tasks", {
